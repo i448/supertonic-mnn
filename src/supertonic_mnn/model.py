@@ -1,5 +1,6 @@
 import os
 import json
+import time
 from huggingface_hub import hf_hub_download
 from .engine import TextToSpeech, load_mnn
 from .text import UnicodeProcessor
@@ -50,7 +51,7 @@ def ensure_models(target_dir: str = DEFAULT_CACHE_DIR, precision: str = "fp16"):
             hf_hub_download(
                 repo_id=REPO_ID,
                 filename="mnn_models/unicode_indexer.json",
-                local_dir=target_dir,
+                local_dir=target_dir
             )
     except Exception as e:
         print(f"Failed to download config files: {e}")

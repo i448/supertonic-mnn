@@ -4,27 +4,29 @@
 A command-line interface for running [Supertonic TTS models](https://github.com/supertone-inc/supertonic) using [MNN](https://github.com/alibaba/MNN).
 
 ## Features
-- **MNN Inference**: Fast, on-device inference using MNN
+- **MNN Inference**: Fast, on-device inference using MNN, **RTF ~ 0.07**
 - **Int8 Supports**: no loss of precisions compared with fp32 and fp16
-- **Voice Styles**: Supports multiple voice styles (M1, F1, etc.)
-- **Local Models**: Use `--model-dir` to specify local model directory
-
 
 ## Usage
 Install by pip and run:
 ```bash
 pip install supertonic-mnn
-supertonic-mnn "Hello world" --voice F1 --precision int8 -o out.wav
+# Provide text through stdin
+echo "Hello world" | supertonic-mnn --output out.wav
+
+# Or read from a text file
+supertonic-mnn --input-file sentences.txt --voice F1 --precision int8 --output out.wav
 ```
 
 ### Available Options
 
+- `--input-file`, `-i`: Input text file to synthesize (each line will be synthesized separately)
 - `--voice`: Voice style (default: M1, choices: M1, M2, F1, F2)
 - `--precision`: Model precision - fp32, fp16, or int8 (default: fp16)
-- `--output`: Output audio file path (default: output.wav)
+- `--output`, `-o`: Output audio file path (default: output.wav)
 - `--speed`: Speech speed multiplier (default: 1.0)
 - `--steps`: Number of denoising steps (default: 5)
-- `--model-dir`: Directory containing models (default: ~/.cache/supertonic-mnn)
+- `--model-dir`: Directory containing models
 
 
 ## Installation By Source Code
@@ -37,13 +39,18 @@ uv sync
 ## Usage
 
 ```bash
+# Reading text from stdin
+echo "Hello world" | uv run supertonic-mnn --output hello.wav
+
 # Using local models with default precision (fp16)
-uv run supertonic-mnn "Hello world" --voice M1 --output hello.wav --model-dir /path/to/models
+echo "Hello world" | uv run supertonic-mnn --output hello.wav --model-dir /path/to/models
 
 # Specify precision
-uv run supertonic-mnn "Hello world" --voice M1 --precision fp32
+echo "Hello world" | uv run supertonic-mnn --output hello.wav --precision fp32
 
 # Download models from HuggingFace (automatic)
-uv run supertonic-mnn "Hello world" --voice M1 --precision int8
+echo "Hello world" | uv run supertonic-mnn --output hello.wav --precision int8
 
+# Batch processing from text file
+uv run supertonic-mnn --input-file sentences.txt --voice F1 --output result.wav
 ```

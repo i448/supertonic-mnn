@@ -1,6 +1,8 @@
 import argparse
 import soundfile as sf
 import re
+import os
+import sys
 from .engine import load_voice_style
 from .model import (
     ensure_models,
@@ -20,10 +22,11 @@ def main():
     parser = argparse.ArgumentParser(description="Supertonic MNN Inference CLI")
 
     parser.add_argument(
-        "text",
+        "--input-file",
+        "-i",
         type=str,
-        nargs="?",
-        help="Text to synthesize. If not provided, reads from stdin.",
+        help="Input text file to synthesize. Each line will be synthesized separately. "
+             "If not provided, reads from stdin.",
     )
 
     parser.add_argument(
@@ -70,15 +73,26 @@ def main():
     args = parser.parse_args()
 
     # Handle input text
-    if args.text:
-        text = args.text
+    if args.input_file:
+        if not os.path.exists(args.input_file):
+            print(f"Error: Input file '{args.input_file}' does not exist.")
+            return
+        with open(args.input_file, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+            texts = [line.strip() for line in lines if line.strip()]
+        if not texts:
+            print(f"Error: No valid text found in '{args.input_file}'.")
+            return
+        print(f"Loaded {len(texts)} line(s) from '{args.input_file}'.")
     else:
-        import sys
-
         print("Reading text from stdin...")
         text = sys.stdin.read().strip()
+        if not text:
+            print("Error: No text provided.")
+            return
+        texts = [text]
 
-    if not text:
+    if not texts:
         print("Error: No text provided.")
         return
 
@@ -107,21 +121,48 @@ def main():
         return
 
     # 4. Synthesize
-    print(f"Synthesizing text: '{text[:50]}...'")
-    try:
-        wav, duration = tts(text, style, args.steps, args.speed)
+    if args.input_file and len(texts) > 1:
+        print(f"Synthesizing {len(texts)} line(s) from file...")
+        output_dir = os.path.dirname(args.output) if os.path.dirname(args.output) else "."
+        base_name = os.path.splitext(os.path.basename(args.output))[0]
+        extension = os.path.splitext(args.output)[1] if os.path.splitext(args.output)[1] else ".wav"
+        
+        for idx, text in enumerate(texts, 1):
+            print(f"Synthesizing line {idx}/{len(texts)}: '{text[:50]}{'...' if len(text) > 50 else ''}'")
+            try:
+                wav, duration, rtf = tts(text, style, args.steps, args.speed)
+                
+                # Generate output filename
+                if len(texts) == 1:
+                    output_file = args.output
+                else:
+                    output_file = os.path.join(output_dir, f"{base_name}_{idx}{extension}")
+                
+                # Save output
+                wav_data = wav[0]
+                sf.write(output_file, wav_data, tts.sample_rate)
+                print(f"Saved audio to: {output_file}")
+                
+            except Exception as e:
+                print(f"Inference failed for line {idx}: {e}")
+                import traceback
+                traceback.print_exc()
+    else:
+        # Single text synthesis
+        text = texts[0]
+        print(f"Synthesizing text: '{text[:50]}{'...' if len(text) > 50 else ''}'")
+        try:
+            wav, duration, rtf = tts(text, style, args.steps, args.speed)
 
-        # 5. Save output
-        # wav is [1, T]
-        wav_data = wav[0]
-        sf.write(args.output, wav_data, tts.sample_rate)
-        print(f"Saved audio to: {args.output}")
+            # Save output
+            wav_data = wav[0]
+            sf.write(args.output, wav_data, tts.sample_rate)
+            print(f"Saved audio to: {args.output}")
 
-    except Exception as e:
-        print(f"Inference failed: {e}")
-        import traceback
-
-        traceback.print_exc()
+        except Exception as e:
+            print(f"Inference failed: {e}")
+            import traceback
+            traceback.print_exc()
 
 
 if __name__ == "__main__":

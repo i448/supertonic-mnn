@@ -1,6 +1,7 @@
 import json
 import numpy as np
 import MNN
+import time
 from .text import UnicodeProcessor, length_to_mask, chunk_text
 
 
@@ -91,11 +92,15 @@ class TextToSpeech:
 
     def _infer(
         self, text_list: list[str], style: Style, total_step: int, speed: float = 1.05
-    ) -> tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray, float]:
         assert (
             len(text_list) == style.ttl.shape[0]
         ), "Number of texts must match number of style vectors"
         bsz = len(text_list)
+        
+        # Start timing for RTF calculation
+        start_time = time.time()
+        
         text_ids, text_mask = self.text_processor(text_list)
         dur_onnx, *_ = self.dp_ort.run(
             None, {"text_ids": text_ids, "style_dp": style.dp, "text_mask": text_mask}
@@ -122,7 +127,11 @@ class TextToSpeech:
                 },
             )
         wav, *_ = self.vocoder_ort.run(None, {"latent": xt})
-        return wav, dur_onnx
+        
+        # Calculate elapsed time for RTF
+        elapsed_time = time.time() - start_time
+        
+        return wav, dur_onnx, elapsed_time
 
     def __call__(
         self,
@@ -131,15 +140,19 @@ class TextToSpeech:
         total_step: int,
         speed: float = 1.05,
         silence_duration: float = 0.3,
-    ) -> tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray, float]:
         assert (
             style.ttl.shape[0] == 1
         ), "Single speaker text to speech only supports single style"
         text_list = chunk_text(text)
         wav_cat = None
         dur_cat = None
+        total_elapsed_time = 0.0
+        
         for text in text_list:
-            wav, dur_onnx = self._infer([text], style, total_step, speed)
+            wav, dur_onnx, elapsed_time = self._infer([text], style, total_step, speed)
+            total_elapsed_time += elapsed_time
+            
             if wav_cat is None:
                 wav_cat = wav
                 dur_cat = dur_onnx
@@ -149,7 +162,17 @@ class TextToSpeech:
                 )
                 wav_cat = np.concatenate([wav_cat, silence, wav], axis=1)
                 dur_cat += dur_onnx + silence_duration
-        return wav_cat, dur_cat
+                
+        # Calculate overall RTF
+        total_audio_duration = wav_cat.shape[1] / self.sample_rate
+        rtf = total_elapsed_time / total_audio_duration if total_audio_duration > 0 else 0.0
+        
+        # Print RTF information
+        print(f"RTF (Real Time Factor): {rtf:.4f}")
+        print(f"Audio Duration: {total_audio_duration:.2f}s")
+        print(f"Generation Time: {total_elapsed_time:.2f}s")
+        
+        return wav_cat, dur_cat, rtf
 
 
 def get_latent_mask(
