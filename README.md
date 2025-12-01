@@ -1,11 +1,11 @@
 # Supertonic MNN CLI
 [![Models](https://img.shields.io/badge/🤗%20Hugging%20Face-Models-blue)](https://huggingface.co/yunfengwang/supertonic-tts-mnn)
 
-A command-line interface for running Supertonic TTS models using [MNN](https://github.com/alibaba/MNN).
+A command-line interface for running [Supertonic TTS models](https://github.com/supertone-inc/supertonic) using [MNN](https://github.com/alibaba/MNN).
 
 ## Features
 - **MNN Inference**: Fast, on-device inference using MNN
-- *Int8 Supports*: no loss of precisions compared with fp32 and fp16
+- **Int8 Supports**: no loss of precisions compared with fp32 and fp16
 - **Voice Styles**: Supports multiple voice styles (M1, F1, etc.)
 - **Local Models**: Use `--model-dir` to specify local model directory
 
@@ -46,6 +46,4 @@ uv run supertonic-mnn "Hello world" --voice M1 --precision fp32
 # Download models from HuggingFace (automatic)
 uv run supertonic-mnn "Hello world" --voice M1 --precision int8
 
-# Example with py directory (if you have local models in old format)
-uv run supertonic-mnn "Hello world" --voice M1 --output hello.wav --model-dir ../py
 ```
