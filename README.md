@@ -4,9 +4,7 @@
 [![Docs](https://img.shields.io/badge/Docs-GitHub%20Pages-blue)](https://vra.github.io/supertonic-mnn/)
 [![PyPI](https://img.shields.io/pypi/v/supertonic-mnn)](https://pypi.org/project/supertonic-mnn/)
 
-Demo video:
 
-<iframe src="//player.bilibili.com/player.html?isOutside=true&aid=115732088161818&bvid=BV1VFqiBSER3&cid=34785791445&p=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>
 
 [English](#english) | [中文](#中文)
 
@@ -16,6 +14,9 @@ Demo video:
 ## English
 
 **Supertonic MNN** is a high-performance, lightweight text-to-speech (TTS) library based on MNN. It supports both command-line interface (CLI) and Python API, making it easy to integrate into your projects.
+
+Demo video: <https://www.bilibili.com/video/BV1VFqiBSER3>  
+
 
 ### Features
 *   **Fast Inference**: RTF ~ 0.07 on CPU.
@@ -67,6 +68,9 @@ This project is based on the original [Supertonic](https://github.com/supertone-
 ## 中文
 
 **Supertonic MNN** 是一个基于 MNN 的高性能、轻量级文本转语音 (TTS) 库。它同时支持命令行接口 (CLI) 和 Python API，方便您将其集成到项目中。
+
+Demo video: <https://www.bilibili.com/video/BV1VFqiBSER3>  
+
 
 ### 特性
 *   **极速推理**: CPU 上 RTF 约为 0.07。
